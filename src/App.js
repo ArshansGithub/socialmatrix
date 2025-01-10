@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NetworkPanel from './components/NetworkPanel';
 import MatrixOperations from './components/MatrixOperations';
-import TransformedNetwork from './components/TransformedNetwork'; // Renamed import
+import ResultGraph from './components/ResultGraph'; // Corrected import
 
 function App() {
   // Network A
   const [peopleA, setPeopleA] = useState([]);
   const [friendshipsA, setFriendshipsA] = useState([]);
 
+  useEffect(() => {
+    console.log('[App] Network A updated:', { peopleA, friendshipsA });
+  }, [peopleA, friendshipsA]);
+
   function removePersonA(personName) {
+    console.log(`[App] Removing person ${personName} from Network A.`);
     setPeopleA(prev => prev.filter(p => p.name !== personName));
     setFriendshipsA(prev =>
       prev.filter(
@@ -21,7 +26,12 @@ function App() {
   const [peopleB, setPeopleB] = useState([]);
   const [friendshipsB, setFriendshipsB] = useState([]);
 
+  useEffect(() => {
+    console.log('[App] Network B updated:', { peopleB, friendshipsB });
+  }, [peopleB, friendshipsB]);
+
   function removePersonB(personName) {
+    console.log(`[App] Removing person ${personName} from Network B.`);
     setPeopleB(prev => prev.filter(p => p.name !== personName));
     setFriendshipsB(prev =>
       prev.filter(
@@ -33,6 +43,10 @@ function App() {
   // Transformed result from matrix ops (A+B, A-B, A×B)
   const [peopleResult, setPeopleResult] = useState([]);
   const [friendshipsResult, setFriendshipsResult] = useState([]);
+
+  useEffect(() => {
+    console.log('[App] Result network updated:', { peopleResult, friendshipsResult });
+  }, [peopleResult, friendshipsResult]);
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -74,8 +88,8 @@ function App() {
         setFriendshipsResult={setFriendshipsResult}
       />
 
-      {/* Show the Transformed Network */}
-      <TransformedNetwork
+      {/* Show the Result Graph */}
+      <ResultGraph
         peopleResult={peopleResult}
         friendshipsResult={friendshipsResult}
       />

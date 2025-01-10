@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IoMdMale, IoMdFemale } from "react-icons/io";
 import { FaQuestionCircle } from "react-icons/fa";
 import GraphVisualization from './GraphVisualization';
@@ -26,36 +26,47 @@ function NetworkPanel({
     "Oscar", "Quentin", "Steve", "Victor", "Xander", "Zach",
   ];
 
+  useEffect(() => {
+    console.log(`[NetworkPanel - ${title}] Initialized with ${people.length} people and ${friendships.length} friendships.`);
+  }, [people, friendships, title]);
+
   /** Add Person (manual) */
   const handleAddPerson = () => {
+    console.log(`[NetworkPanel - ${title}] Attempting to add person: ${personName}, Gender: ${gender}`);
     const trimmed = personName.trim();
     if (!trimmed) {
       alert('Enter a name, please.');
+      console.warn(`[NetworkPanel - ${title}] Person name is empty.`);
       return;
     }
     if (!gender) {
       alert('Select a gender, please.');
+      console.warn(`[NetworkPanel - ${title}] Gender not selected.`);
       return;
     }
     if (people.some(p => p.name === trimmed)) {
       alert(`${trimmed} already exists in ${title}.`);
+      console.warn(`[NetworkPanel - ${title}] Person ${trimmed} already exists.`);
       return;
     }
     setPeople([
       ...people,
       { name: trimmed, gender, network: networkLabel }
     ]);
+    console.log(`[NetworkPanel - ${title}] Added person: ${trimmed}`);
     setPersonName('');
     setGender('');
   };
 
   /** Add Random Person (one at a time) */
   const handleAddRandomPerson = () => {
+    console.log(`[NetworkPanel - ${title}] Adding a random person.`);
     const allPool = [...femaleNames, ...maleNames];
     const used = new Set(people.map(p => p.name));
     const available = allPool.filter(n => !used.has(n));
     if (available.length === 0) {
       alert('No random names left for this network!');
+      console.warn(`[NetworkPanel - ${title}] No available random names to add.`);
       return;
     }
     const isMale = Math.random() < 0.5;
@@ -64,6 +75,7 @@ function NetworkPanel({
       ...people,
       { name: chosenName, gender: isMale ? 'male' : 'female', network: networkLabel }
     ]);
+    console.log(`[NetworkPanel - ${title}] Added random person: ${chosenName}, Gender: ${isMale ? 'male' : 'female'}`);
   };
 
   /**
@@ -73,18 +85,22 @@ function NetworkPanel({
    * - Creates random edges between them
    */
   const handleGenerateRandomNetwork = () => {
+    console.log(`[NetworkPanel - ${title}] Generating a new random network.`);
     if (!window.confirm(`This will replace all current data in ${title} with a new random set. Continue?`)) {
+      console.log(`[NetworkPanel - ${title}] User canceled random network generation.`);
       return;
     }
     // Clear existing data
     setPeople([]);
     setFriendships([]);
+    console.log(`[NetworkPanel - ${title}] Cleared existing people and friendships.`);
 
     const newPeople = [];
     const usedNames = new Set();
 
     // Decide how many random people (5..10)
     const count = 5 + Math.floor(Math.random() * 6);
+    console.log(`[NetworkPanel - ${title}] Generating ${count} random people.`);
 
     for (let i = 0; i < count; i++) {
       const isMale = Math.random() < 0.5;
@@ -100,6 +116,7 @@ function NetworkPanel({
         gender: isMale ? 'male' : 'female',
         network: networkLabel,
       });
+      console.log(`[NetworkPanel - ${title}] Generated person: ${rndName}, Gender: ${isMale ? 'male' : 'female'}`);
     }
 
     // Build random friendships
@@ -113,6 +130,7 @@ function NetworkPanel({
             source: newPeople[i].name,
             target: newPeople[j].name,
           });
+          console.log(`[NetworkPanel - ${title}] Created friendship between ${newPeople[i].name} and ${newPeople[j].name}`);
         }
       }
     }
@@ -120,9 +138,11 @@ function NetworkPanel({
     setPeople(newPeople);
     setFriendships(newFriendships);
     alert(`Generated ${count} random people in ${title}.`);
+    console.log(`[NetworkPanel - ${title}] Random network generation complete.`);
   };
 
   const explainPanel = () => {
+    console.log(`[NetworkPanel - ${title}] User requested explanation for the panel.`);
     alert(
       `${title} Panel:\n\n` +
       "• 'Add Person' => create a custom-named person in this network.\n" +
@@ -160,18 +180,27 @@ function NetworkPanel({
           <input
             type="text"
             value={personName}
-            onChange={(e) => setPersonName(e.target.value)}
+            onChange={(e) => {
+              setPersonName(e.target.value);
+              console.log(`[NetworkPanel - ${title}] Input person name: ${e.target.value}`);
+            }}
             placeholder="Name..."
             className="flex-1 border p-2 rounded text-sm min-w-[120px]"
           />
           <button
-            onClick={() => setGender('male')}
+            onClick={() => {
+              setGender('male');
+              console.log(`[NetworkPanel - ${title}] Gender selected: Male`);
+            }}
             className={`p-2 rounded text-white text-sm ${gender === 'male' ? 'bg-blue-700' : 'bg-blue-500'}`}
           >
             <IoMdMale />
           </button>
           <button
-            onClick={() => setGender('female')}
+            onClick={() => {
+              setGender('female');
+              console.log(`[NetworkPanel - ${title}] Gender selected: Female`);
+            }}
             className={`p-2 rounded text-white text-sm ${gender === 'female' ? 'bg-pink-700' : 'bg-pink-500'}`}
           >
             <IoMdFemale />

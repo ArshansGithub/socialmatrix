@@ -1,10 +1,11 @@
+// GraphVisualization.js
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
+import { FaQuestionCircle } from 'react-icons/fa';
 
 const getIconUrl = (person) => {
   const lowerName = person.id.toLowerCase();
 
-  // If the person's name is "arshan", load /arshan.svg from the public folder
   if (lowerName === 'arshan') {
     return process.env.PUBLIC_URL + '/arshan.svg';
   }
@@ -15,7 +16,6 @@ const getIconUrl = (person) => {
     return process.env.PUBLIC_URL + '/ethan.svg';
   }
 
-  // Otherwise, pick female/male from public:
   if (person.gender === 'female') {
     return process.env.PUBLIC_URL + '/female.svg';
   }
@@ -46,14 +46,32 @@ function GraphVisualization({
 }) {
   const svgRef = useRef(null);
   const simulationRef = useRef(null);
-
   const selectedNodesRef = useRef([]);
 
-  // 1) Add a random connection inside this network (only if not readOnly)
+  /**
+   * 5) Remove a friendship on link click (only if not readOnly)
+   */
+  const removeFriendship = (s, t) => {
+    if (readOnly) return;
+    console.log(`[GraphVisualization - ${title}] Attempting to remove friendship between ${s} and ${t}`);
+    if (window.confirm(`Remove friendship between ${s} and ${t}?`)) {
+      const updated = friendships.filter(f =>
+        !((f.source === s && f.target === t) || (f.source === t && f.target === s))
+      );
+      setFriendships(updated);
+      console.log(`[GraphVisualization - ${title}] Removed friendship between ${s} and ${t}.`);
+    }
+  };
+
+  /**
+   * 1) Add a random connection inside this network (only if not readOnly)
+   */
   const addRandomFriendship = () => {
     if (readOnly) return;
+    console.log(`[GraphVisualization - ${title}] Adding a random friendship.`);
     if (people.length < 2) {
       alert('Not enough people for random friendship.');
+      console.warn(`[GraphVisualization - ${title}] Not enough people to add a friendship.`);
       return;
     }
     const notFriends = [];
@@ -72,36 +90,46 @@ function GraphVisualization({
     }
     if (notFriends.length === 0) {
       alert('All possible friendships exist already!');
+      console.warn(`[GraphVisualization - ${title}] All possible friendships already exist.`);
       return;
     }
     const rnd = Math.floor(Math.random() * notFriends.length);
     const [s, t] = notFriends[rnd];
     setFriendships([...friendships, { source: s, target: t }]);
+    console.log(`[GraphVisualization - ${title}] Added friendship between ${s} and ${t}.`);
   };
 
-  // 2) Handle node click => dispatch custom event
+  /**
+   * 2) Handle node click => dispatch custom event
+   */
   const handleNodeClick = (d) => {
     if (readOnly) return;
+    console.log(`[GraphVisualization - ${title}] Node clicked: ${d.id}`);
     const evt = new CustomEvent('nodeClick', { detail: d.id });
     window.dispatchEvent(evt);
   };
 
-  // 3) Handle selection logic upon 'nodeClick' event
+  /**
+   * 3) Handle selection logic upon 'nodeClick' event
+   */
   const handleSelection = (e) => {
     if (readOnly) return;
     const selId = e.detail;
+    console.log(`[GraphVisualization - ${title}] Handling selection for node: ${selId}`);
     const selNodes = selectedNodesRef.current;
 
     if (selNodes.length === 0) {
       // First node selected
       selNodes.push(selId);
       highlightNode(selId, true);
+      console.log(`[GraphVisualization - ${title}] First node selected: ${selId}`);
 
     } else if (selNodes.length === 1) {
       if (selNodes[0] === selId) {
         // Same node => unhighlight
         highlightNode(selId, false);
         selNodes.pop();
+        console.log(`[GraphVisualization - ${title}] Deselected node: ${selId}`);
       } else {
         // Different node => create friendship if none
         const exists = friendships.some(f =>
@@ -110,8 +138,10 @@ function GraphVisualization({
         );
         if (exists) {
           alert('Friendship already exists in this network.');
+          console.warn(`[GraphVisualization - ${title}] Friendship already exists between ${selNodes[0]} and ${selId}.`);
         } else {
           setFriendships([...friendships, { source: selNodes[0], target: selId }]);
+          console.log(`[GraphVisualization - ${title}] Created new friendship between ${selNodes[0]} and ${selId}.`);
         }
         highlightNode(selNodes[0], false);
         highlightNode(selId, false);
@@ -120,29 +150,39 @@ function GraphVisualization({
     }
   };
 
-  // 4) Toggle highlight on a node
+  /**
+   * 4) Toggle highlight on a node
+   */
   const highlightNode = (id, highlight) => {
+    console.log(`[GraphVisualization - ${title}] Highlighting node ${id}: ${highlight}`);
     d3.select(svgRef.current)
       .selectAll("g.node")
       .filter(d => d && d.id === id)
       .classed("selected-node", highlight);
   };
 
-  // 5) Remove a friendship on link click (only if not readOnly)
-  const removeFriendship = (s, t) => {
-    if (readOnly) return;
-    if (window.confirm(`Remove friendship between ${s} and ${t}?`)) {
-      const updated = friendships.filter(f =>
-        !((f.source === s && f.target === t) || (f.source === t && f.target === s))
-      );
-      setFriendships(updated);
-    }
-  };
-
-  // 6) useEffect => build the D3 force-directed graph
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  /**
+   * Listen for 'nodeClick' => handleSelection
+   */
   useEffect(() => {
-    if (!svgRef.current || people.length === 0) return;
+    if (readOnly) return; // skip selection in read-only
+    console.log(`[GraphVisualization - ${title}] Setting up nodeClick event listener.`);
+    window.addEventListener('nodeClick', handleSelection);
+    return () => {
+      window.removeEventListener('nodeClick', handleSelection);
+      console.log(`[GraphVisualization - ${title}] Removed nodeClick event listener.`);
+    };
+  }, [friendships, readOnly, title]);
+
+  /**
+   * 6) useEffect => build the D3 force-directed graph
+   */
+  useEffect(() => {
+    console.log(`[GraphVisualization - ${title}] Rendering graph.`);
+    if (!svgRef.current || people.length === 0) {
+      console.log(`[GraphVisualization - ${title}] No people to display.`);
+      return;
+    }
 
     // Clear any old drawing
     d3.select(svgRef.current).selectAll("*").remove();
@@ -152,6 +192,7 @@ function GraphVisualization({
       people.some(p => p.name === f.source) &&
       people.some(p => p.name === f.target)
     );
+    console.log(`[GraphVisualization - ${title}] Valid friendships count:`, validEdges.length);
 
     // Setup width/height
     const width = svgRef.current.clientWidth;
@@ -171,6 +212,8 @@ function GraphVisualization({
       source: f.source,
       target: f.target
     }));
+    console.log(`[GraphVisualization - ${title}] Nodes count:`, nodes.length);
+    console.log(`[GraphVisualization - ${title}] Links count:`, links.length);
 
     // Build simulation
     const sim = d3.forceSimulation(nodes)
@@ -192,7 +235,7 @@ function GraphVisualization({
       .attr('stroke-width', 2)
       .attr('class', 'link')
       .on('click', (evt, d) => {
-        // Only if not readOnly
+        console.log(`[GraphVisualization - ${title}] Link clicked between ${d.source.id} and ${d.target.id}`);
         if (!readOnly) {
           evt.stopPropagation();
           removeFriendship(d.source.id, d.target.id);
@@ -213,17 +256,18 @@ function GraphVisualization({
       .attr('class', 'node')
       .on('click', (evt, d) => {
         if (!readOnly) {
+          console.log(`[GraphVisualization - ${title}] Node clicked: ${d.id}`);
           evt.stopPropagation();
           handleNodeClick(d);
         }
       })
       .on('contextmenu', (evt, d) => {
-        // Prevent default menu
         evt.preventDefault();
-        // If readOnly => do nothing. If not readOnly => remove?
+        console.log(`[GraphVisualization - ${title}] Context menu on node: ${d.id}`);
         if (!readOnly && typeof removePerson === 'function') {
           const confirmDelete = window.confirm(`Delete "${d.id}"?`);
           if (confirmDelete) {
+            console.log(`[GraphVisualization - ${title}] Removing person: ${d.id}`);
             removePerson(d.id);
           }
         }
@@ -243,12 +287,12 @@ function GraphVisualization({
 
     // Icons
     nodeSel.append('image')
-  .attr('class', 'node-image')
-  .attr('x', -20)
-  .attr('y', -20)
-  .attr('width', 40)
-  .attr('height', 40)
-  .attr('xlink:href', d => getIconUrl(d));
+      .attr('class', 'node-image')
+      .attr('x', -20)
+      .attr('y', -20)
+      .attr('width', 40)
+      .attr('height', 40)
+      .attr('xlink:href', d => getIconUrl(d));
 
     // Labels
     nodeSel.append('text')
@@ -284,37 +328,55 @@ function GraphVisualization({
       if (!evt.active) sim.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
+      console.log(`[GraphVisualization - ${title}] Drag started on node: ${d.id}`);
     }
     function dragged(evt, d) {
       d.fx = evt.x;
       d.fy = evt.y;
+      console.log(`[GraphVisualization - ${title}] Dragging node: ${d.id} to (${d.fx}, ${d.fy})`);
     }
     function dragended(evt, d) {
       if (!evt.active) sim.alphaTarget(0);
       d.fx = null;
       d.fy = null;
+      console.log(`[GraphVisualization - ${title}] Drag ended on node: ${d.id}`);
     }
 
     // Cleanup
     return () => {
       if (simulationRef.current) {
         simulationRef.current.stop();
+        console.log(`[GraphVisualization - ${title}] Simulation stopped.`);
       }
     };
-  }, [people, friendships, networkLabel, readOnly]);
+  }, [people, friendships, networkLabel, readOnly, title, removeFriendship, handleNodeClick, handleSelection]);
 
-  // Listen for 'nodeClick' => handleSelection
-  useEffect(() => {
-    if (readOnly) return; // skip selection in read-only
-    window.addEventListener('nodeClick', handleSelection);
-    return () => {
-      window.removeEventListener('nodeClick', handleSelection);
-    };
-  }, [friendships, readOnly]);
+  /**
+   * Explanation Handler
+   */
+  const explainGraph = () => {
+    console.log(`[GraphVisualization - ${title}] User requested explanation for the graph.`);
+    alert(
+      "Graph Visualization:\n\n" +
+      "• Displays the network of people and their friendships.\n" +
+      "• Nodes represent people, and edges represent friendships.\n" +
+      "• Click on nodes to select and create friendships.\n" +
+      "• Right-click on nodes to delete a person.\n" +
+      "• Hover over edges to highlight them.\n\n" +
+      "Use the controls above the graph to add random friendships or manipulate the network."
+    );
+  };
 
   return (
     <div className="bg-white p-2 rounded shadow">
-      <h3 className="text-lg font-semibold text-center mb-2">{title}</h3>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-semibold text-center">{title}</h3>
+        <FaQuestionCircle
+          onClick={explainGraph}
+          className="text-gray-500 hover:text-gray-700 cursor-pointer"
+          title="Learn about Graph Visualization"
+        />
+      </div>
 
       {/* Show random connection button only if not readOnly */}
       {!readOnly && (

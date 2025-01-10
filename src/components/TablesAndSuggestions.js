@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 
 function buildAdjacencyMatrix(people, friendships) {
+  console.log('[TablesAndSuggestions] Building adjacency matrix.');
   const n = people.length;
   const nameToIndex = {};
   people.forEach((p, i) => (nameToIndex[p.name] = i));
@@ -15,10 +16,12 @@ function buildAdjacencyMatrix(people, friendships) {
       matrix[j][i] = 1;
     }
   });
+  console.log('[TablesAndSuggestions] Adjacency matrix built.');
   return matrix;
 }
 
 function multiply(A, B) {
+  console.log('[TablesAndSuggestions] Multiplying matrices.');
   const n = A.length;
   const C = Array.from({ length: n }, () => Array(n).fill(0));
   for (let i = 0; i < n; i++) {
@@ -30,10 +33,12 @@ function multiply(A, B) {
       C[i][j] = sum;
     }
   }
+  console.log('[TablesAndSuggestions] Matrices multiplied.');
   return C;
 }
 
 function TablesAndSuggestions({ people, friendships }) {
+  console.log('[TablesAndSuggestions] Rendering TablesAndSuggestions component.');
   const adjacency = buildAdjacencyMatrix(people, friendships);
 
   // Friend Count
@@ -41,14 +46,16 @@ function TablesAndSuggestions({ people, friendships }) {
     const c = friendships.filter((f) => f.source === p.name || f.target === p.name).length;
     return { name: p.name, count: c };
   }).sort((a, b) => b.count - a.count);
+  console.log('[TablesAndSuggestions] Calculated friend counts.');
 
   // Friend Suggestions
   const [suggestions, setSuggestions] = useState([]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    console.log('[TablesAndSuggestions] Calculating friend suggestions.');
     if (people.length === 0) {
       setSuggestions([]);
+      console.log('[TablesAndSuggestions] No people to suggest friends for.');
       return;
     }
     const A = adjacency;
@@ -69,9 +76,11 @@ function TablesAndSuggestions({ people, friendships }) {
     }
     sugs.sort((x, y) => y.mutualCount - x.mutualCount);
     setSuggestions(sugs.slice(0, 10));
-  }, [people, friendships]);
+    console.log(`[TablesAndSuggestions] Generated ${sugs.length} suggestions.`);
+  }, [people, friendships, adjacency]);
 
   const explainSuggestions = () => {
+    console.log('[TablesAndSuggestions] User requested explanation for Friend Suggestions.');
     alert(
       "Friend Suggestions:\n\n" +
       "• We compute A² (A multiplied by itself) to see how many '2-step paths' exist between two people.\n" +
