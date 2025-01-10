@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/socialmatrix/static/css/main.af866de8.css",
+    "main.js": "/socialmatrix/static/js/main.af3c2519.js",
+    "static/js/488.138da6d5.chunk.js": "/socialmatrix/static/js/488.138da6d5.chunk.js",
+    "index.html": "/socialmatrix/index.html",
+    "main.af866de8.css.map": "/socialmatrix/static/css/main.af866de8.css.map",
+    "main.af3c2519.js.map": "/socialmatrix/static/js/main.af3c2519.js.map",
+    "488.138da6d5.chunk.js.map": "/socialmatrix/static/js/488.138da6d5.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.af866de8.css",
+    "static/js/main.af3c2519.js"
+  ]
+}
