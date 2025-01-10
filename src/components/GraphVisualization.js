@@ -1,10 +1,26 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import FemaleIcon from "../female.svg";
-import MaleIcon from "../male.svg";
-import ArshanIcon from "../arshan.svg";
-import JoonIcon from "../joon.svg";
-import EthanIcon from "../ethan.svg";
+
+const getIconUrl = (person) => {
+  const lowerName = person.id.toLowerCase();
+
+  // If the person's name is "arshan", load /arshan.svg from the public folder
+  if (lowerName === 'arshan') {
+    return process.env.PUBLIC_URL + '/arshan.svg';
+  }
+  if (lowerName === 'joon') {
+    return process.env.PUBLIC_URL + '/joon.svg';
+  }
+  if (lowerName === 'ethan') {
+    return process.env.PUBLIC_URL + '/ethan.svg';
+  }
+
+  // Otherwise, pick female/male from public:
+  if (person.gender === 'female') {
+    return process.env.PUBLIC_URL + '/female.svg';
+  }
+  return process.env.PUBLIC_URL + '/male.svg';
+};
 
 function calculateRadius(name) {
   const baseRadius = 15;
@@ -226,18 +242,12 @@ function GraphVisualization({
 
     // Icons
     nodeSel.append('image')
-      .attr('class', 'node-image')
-      .attr('x', -20)
-      .attr('y', -20)
-      .attr('width', 40)
-      .attr('height', 40)
-      .attr('xlink:href', d => {
-        const lowerName = d.id.toLowerCase();
-        if (lowerName === 'arshan') return ArshanIcon;
-        if (lowerName === 'joon') return JoonIcon;
-        if (lowerName === 'ethan') return EthanIcon;
-        return d.gender === 'female' ? FemaleIcon : MaleIcon;
-      });
+  .attr('class', 'node-image')
+  .attr('x', -20)
+  .attr('y', -20)
+  .attr('width', 40)
+  .attr('height', 40)
+  .attr('xlink:href', d => getIconUrl(d));
 
     // Labels
     nodeSel.append('text')
