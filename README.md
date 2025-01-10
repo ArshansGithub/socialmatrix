@@ -1,6 +1,6 @@
 # SocialMatrix
 
-This is my **Calculus AB Final Project**! The idea is to **visualize and explore** social networks using **matrices**. It’s a simple React.JS web application where you can:
+[This](https://arshansgithub.github.io/socialmatrix/) is my **Calculus AB Final Project**! The idea is to **visualize and explore** social networks using **matrices**. It’s a simple React.JS web application where you can:
 
 - **Add people** to a network  
 - **Generate random connections** between them  
