@@ -45,6 +45,7 @@ function TablesAndSuggestions({ people, friendships }) {
   // Friend Suggestions
   const [suggestions, setSuggestions] = useState([]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (people.length === 0) {
       setSuggestions([]);
