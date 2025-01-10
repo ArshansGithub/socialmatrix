@@ -140,6 +140,7 @@ function GraphVisualization({
   };
 
   // 6) useEffect => build the D3 force-directed graph
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!svgRef.current || people.length === 0) return;
 
