@@ -1,70 +1,45 @@
-# Getting Started with Create React App
+# SocialMatrix
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+[This](https://arshansgithub.github.io/socialmatrix/) is my **Calculus AB Final Project**! The idea is to **visualize and explore** social networks using **matrices**. It’s a simple React.JS web application where you can:
 
-## Available Scripts
+- **Add people** to a network  
+- **Generate random connections** between them  
+- **View** how those connections look in a **graph**  
+- **Use matrices** to combine or modify multiple networks  
 
-In the project directory, you can run:
+I built this website to show how **matrix operations** (like addition, subtraction, and multiplication) can directly be applied to a social network.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## How It Works
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. **Networks A & B**  
+   - You can manually add people or let the app create a *random* set of people and friendships.  
+   - Each person shows up as a node in the network.  
+   - Friendships show up as edges between nodes.
 
-### `npm test`
+2. **Matrix Operations**  
+   - Each network can be turned into an **adjacency matrix**.  
+   - Adding or removing people changes the matrix size.  
+   - **A + B** merges edges from both networks.  
+   - **A - B** keeps edges that are only in A.  
+   - **A × B** shows two-step paths (“friend-of-a-friend” type connections).
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+3. **Result Graph**  
+   - After a matrix operation, see the **combined** or **modified** network in the “Result Graph.”  
+   - Tables show the **adjacency matrix**, each person’s **friend count**, and **friend suggestions** based on mutual friends.
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Why It’s Useful (and Fun)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Visual Learning**: Matrices can be hard to picture, so seeing them affect a social network helps.  
+- **Friend Suggestions**: Demonstrates how 2-step paths can hint at potential new friendships.  
+- **Easy Experimentation**: Create random networks, apply matrix operationss, and see instant results.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Technologies Used
+- React.JS for the UI
+- D3.js for the graph visualization
+- Tailwind CSS for styling
