@@ -1,0 +1,34 @@
+/* selected-node => orange highlight */
+.selected-node .node-background {
+  stroke: orange;
+  stroke-width: 3px;
+  stroke-opacity: 0.8;
+}
+
+/* hovered link => red */
+.link-hover {
+  stroke: red !important;
+  stroke-width: 3px !important;
+  cursor: pointer;
+}
+
+/* network-b => purple outline if you want B special; 
+   you can do network-c => something else. */
+.network-b {
+  stroke: purple;
+  stroke-width: 2px;
+}
+
+.node text {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  fill: black;
+  paint-order: stroke;
+  stroke: white;
+  stroke-width: 0.5px;
+  pointer-events: none;
+}
+
+svg {
+  overflow: visible;
+}
