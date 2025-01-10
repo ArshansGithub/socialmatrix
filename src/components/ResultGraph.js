@@ -1,3 +1,4 @@
+// ResultGraph.js
 import React from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 import GraphVisualization from './GraphVisualization';
@@ -5,7 +6,8 @@ import TablesAndSuggestions from './TablesAndSuggestions';
 
 function ResultGraph({ peopleResult = [], friendshipsResult = [] }) {
   console.log('[ResultGraph] Rendering ResultGraph component.');
-  // read-only => pass no-op
+
+  // read-only => pass readOnly=true
   const noOp = () => {
     console.log('[ResultGraph] setFriendships called (no-op)');
   };
@@ -46,10 +48,11 @@ function ResultGraph({ peopleResult = [], friendshipsResult = [] }) {
 
       <GraphVisualization
         title="(Result)"
-        people={peopleResult}
+        people={peopleResult.map(p => ({ ...p, network: 'C' }))} // Ensure network label is 'C' for the result graph
         friendships={friendshipsResult}
         setFriendships={noOp}
         networkLabel="C"
+        readOnly={true} // Set readOnly to true
       />
 
       {/* Show stats (adjacency, friend count, suggestions) for the result */}

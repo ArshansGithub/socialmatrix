@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+// TablesAndSuggestions.js
+import React, { useEffect, useState, useMemo } from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 
+/**
+ * Builds the adjacency matrix from people and friendships.
+ */
 function buildAdjacencyMatrix(people, friendships) {
   console.log('[TablesAndSuggestions] Building adjacency matrix.');
   const n = people.length;
@@ -20,6 +24,9 @@ function buildAdjacencyMatrix(people, friendships) {
   return matrix;
 }
 
+/**
+ * Multiplies two matrices.
+ */
 function multiply(A, B) {
   console.log('[TablesAndSuggestions] Multiplying matrices.');
   const n = A.length;
@@ -39,13 +46,24 @@ function multiply(A, B) {
 
 function TablesAndSuggestions({ people, friendships }) {
   console.log('[TablesAndSuggestions] Rendering TablesAndSuggestions component.');
-  const adjacency = buildAdjacencyMatrix(people, friendships);
+
+  // Memoize the adjacency matrix
+  const adjacency = useMemo(
+    () => buildAdjacencyMatrix(people, friendships),
+    [people, friendships]
+  );
 
   // Friend Count
-  const friendCounts = people.map((p) => {
-    const c = friendships.filter((f) => f.source === p.name || f.target === p.name).length;
-    return { name: p.name, count: c };
-  }).sort((a, b) => b.count - a.count);
+  const friendCounts = useMemo(() => {
+    return people
+      .map((p) => {
+        const c = friendships.filter(
+          (f) => f.source === p.name || f.target === p.name
+        ).length;
+        return { name: p.name, count: c };
+      })
+      .sort((a, b) => b.count - a.count);
+  }, [people, friendships]);
   console.log('[TablesAndSuggestions] Calculated friend counts.');
 
   // Friend Suggestions
@@ -83,12 +101,12 @@ function TablesAndSuggestions({ people, friendships }) {
     console.log('[TablesAndSuggestions] User requested explanation for Friend Suggestions.');
     alert(
       "Friend Suggestions:\n\n" +
-      "• We compute A² (A multiplied by itself) to see how many '2-step paths' exist between two people.\n" +
-      "• If A[i][j] == 0 (they're not friends) but A²[i][j] > 0 (they share mutual friends), we suggest they connect.\n\n" +
-      "Real-World:\n" +
-      "• 'Recommended friends' (social networks)\n" +
-      "• 'People you may know' features\n" +
-      "• Suggesting new connections to strengthen clusters."
+        "• We compute A² (A multiplied by itself) to see how many '2-step paths' exist between two people.\n" +
+        "• If A[i][j] == 0 (they're not friends) but A²[i][j] > 0 (they share mutual friends), we suggest they connect.\n\n" +
+        "Real-World:\n" +
+        "• 'Recommended friends' (social networks)\n" +
+        "• 'People you may know' features\n" +
+        "• Suggesting new connections to strengthen clusters."
     );
   };
 
@@ -107,7 +125,9 @@ function TablesAndSuggestions({ people, friendships }) {
                 <tr className="bg-gray-200">
                   <th></th>
                   {people.map((p) => (
-                    <th key={p.name} className="border p-1">{p.name}</th>
+                    <th key={p.name} className="border p-1">
+                      {p.name}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -120,7 +140,9 @@ function TablesAndSuggestions({ people, friendships }) {
                       return (
                         <td
                           key={cp.name}
-                          className={`border p-1 text-center ${val === 1 ? 'bg-green-100' : ''}`}
+                          className={`border p-1 text-center ${
+                            val === 1 ? 'bg-green-100' : ''
+                          }`}
                         >
                           {i === j ? '-' : val}
                         </td>

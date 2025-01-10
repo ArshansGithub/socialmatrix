@@ -3,6 +3,9 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { FaQuestionCircle } from 'react-icons/fa';
 
+/**
+ * Helper function to determine icon URL based on person's name or gender.
+ */
 const getIconUrl = (person) => {
   const lowerName = person.id.toLowerCase();
 
@@ -22,12 +25,18 @@ const getIconUrl = (person) => {
   return process.env.PUBLIC_URL + '/male.svg';
 };
 
+/**
+ * Calculate node radius based on name length.
+ */
 function calculateRadius(name) {
   const baseRadius = 15;
   const extra = name.length * 2;
   return baseRadius + extra;
 }
 
+/**
+ * Calculate font size based on name length.
+ */
 function calculateFontSize(name) {
   const base = 12;
   const maxLen = 10;
@@ -42,16 +51,17 @@ function GraphVisualization({
   setFriendships,
   networkLabel,
   removePerson,
-  readOnly = false
+  readOnly = false,
+  onNodeClick, // Callback for node clicks
+  selectedNodes = [], // Array of selected node IDs
 }) {
   const svgRef = useRef(null);
   const simulationRef = useRef(null);
-  const selectedNodesRef = useRef([]);
 
   /**
-   * 5) Remove a friendship on link click (only if not readOnly)
+   * Remove a friendship between two people.
    */
-  const removeFriendship = (s, t) => {
+  const removeFriendshipHandler = (s, t) => {
     if (readOnly) return;
     console.log(`[GraphVisualization - ${title}] Attempting to remove friendship between ${s} and ${t}`);
     if (window.confirm(`Remove friendship between ${s} and ${t}?`)) {
@@ -64,7 +74,7 @@ function GraphVisualization({
   };
 
   /**
-   * 1) Add a random connection inside this network (only if not readOnly)
+   * Add a random friendship within the network.
    */
   const addRandomFriendship = () => {
     if (readOnly) return;
@@ -100,82 +110,7 @@ function GraphVisualization({
   };
 
   /**
-   * 2) Handle node click => dispatch custom event
-   */
-  const handleNodeClick = (d) => {
-    if (readOnly) return;
-    console.log(`[GraphVisualization - ${title}] Node clicked: ${d.id}`);
-    const evt = new CustomEvent('nodeClick', { detail: d.id });
-    window.dispatchEvent(evt);
-  };
-
-  /**
-   * 3) Handle selection logic upon 'nodeClick' event
-   */
-  const handleSelection = (e) => {
-    if (readOnly) return;
-    const selId = e.detail;
-    console.log(`[GraphVisualization - ${title}] Handling selection for node: ${selId}`);
-    const selNodes = selectedNodesRef.current;
-
-    if (selNodes.length === 0) {
-      // First node selected
-      selNodes.push(selId);
-      highlightNode(selId, true);
-      console.log(`[GraphVisualization - ${title}] First node selected: ${selId}`);
-
-    } else if (selNodes.length === 1) {
-      if (selNodes[0] === selId) {
-        // Same node => unhighlight
-        highlightNode(selId, false);
-        selNodes.pop();
-        console.log(`[GraphVisualization - ${title}] Deselected node: ${selId}`);
-      } else {
-        // Different node => create friendship if none
-        const exists = friendships.some(f =>
-          (f.source === selNodes[0] && f.target === selId) ||
-          (f.source === selId && f.target === selNodes[0])
-        );
-        if (exists) {
-          alert('Friendship already exists in this network.');
-          console.warn(`[GraphVisualization - ${title}] Friendship already exists between ${selNodes[0]} and ${selId}.`);
-        } else {
-          setFriendships([...friendships, { source: selNodes[0], target: selId }]);
-          console.log(`[GraphVisualization - ${title}] Created new friendship between ${selNodes[0]} and ${selId}.`);
-        }
-        highlightNode(selNodes[0], false);
-        highlightNode(selId, false);
-        selectedNodesRef.current = [];
-      }
-    }
-  };
-
-  /**
-   * 4) Toggle highlight on a node
-   */
-  const highlightNode = (id, highlight) => {
-    console.log(`[GraphVisualization - ${title}] Highlighting node ${id}: ${highlight}`);
-    d3.select(svgRef.current)
-      .selectAll("g.node")
-      .filter(d => d && d.id === id)
-      .classed("selected-node", highlight);
-  };
-
-  /**
-   * Listen for 'nodeClick' => handleSelection
-   */
-  useEffect(() => {
-    if (readOnly) return; // skip selection in read-only
-    console.log(`[GraphVisualization - ${title}] Setting up nodeClick event listener.`);
-    window.addEventListener('nodeClick', handleSelection);
-    return () => {
-      window.removeEventListener('nodeClick', handleSelection);
-      console.log(`[GraphVisualization - ${title}] Removed nodeClick event listener.`);
-    };
-  }, [friendships, readOnly, title]);
-
-  /**
-   * 6) useEffect => build the D3 force-directed graph
+   * useEffect to build the D3 force-directed graph.
    */
   useEffect(() => {
     console.log(`[GraphVisualization - ${title}] Rendering graph.`);
@@ -238,7 +173,7 @@ function GraphVisualization({
         console.log(`[GraphVisualization - ${title}] Link clicked between ${d.source.id} and ${d.target.id}`);
         if (!readOnly) {
           evt.stopPropagation();
-          removeFriendship(d.source.id, d.target.id);
+          removeFriendshipHandler(d.source.id, d.target.id);
         }
       })
       .on('mouseover', function () {
@@ -253,12 +188,12 @@ function GraphVisualization({
       .selectAll('g.node')
       .data(nodes)
       .enter().append('g')
-      .attr('class', 'node')
+      .attr('class', d => selectedNodes.includes(d.id) ? 'node selected-node' : 'node')
       .on('click', (evt, d) => {
-        if (!readOnly) {
+        if (!readOnly && typeof onNodeClick === 'function') {
           console.log(`[GraphVisualization - ${title}] Node clicked: ${d.id}`);
           evt.stopPropagation();
-          handleNodeClick(d);
+          onNodeClick(d.id);
         }
       })
       .on('contextmenu', (evt, d) => {
@@ -278,9 +213,17 @@ function GraphVisualization({
         .on('end', dragended)
       );
 
-    // Circles
+    // Circles with network-specific styling
     nodeSel.append('circle')
-      .attr('class', d => d.network === 'B' ? "node-background network-b" : "node-background")
+      .attr('class', d => {
+        if (networkLabel === 'C') {
+          return "node-background network-c";
+        } else if (d.network === 'B') {
+          return "node-background network-b";
+        } else {
+          return "node-background network-a";
+        }
+      })
       .attr('r', 25)
       .attr('fill', 'none')
       .attr('stroke', 'transparent');
@@ -349,7 +292,7 @@ function GraphVisualization({
         console.log(`[GraphVisualization - ${title}] Simulation stopped.`);
       }
     };
-  }, [people, friendships, networkLabel, readOnly, title, removeFriendship, handleNodeClick, handleSelection]);
+  }, [people, friendships, networkLabel, readOnly, title, removeFriendshipHandler, onNodeClick, selectedNodes]);
 
   /**
    * Explanation Handler

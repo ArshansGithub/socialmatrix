@@ -1,8 +1,79 @@
-import React, { useState, useEffect } from 'react';
+// NetworkPanel.js
+import React, { useState, useEffect, memo } from 'react';
 import { IoMdMale, IoMdFemale } from "react-icons/io";
 import { FaQuestionCircle } from "react-icons/fa";
 import GraphVisualization from './GraphVisualization';
 import TablesAndSuggestions from './TablesAndSuggestions';
+import { useRef } from 'react';
+
+/** 
+ * Memoized AddPersonForm to prevent re-renders affecting the graph
+ */
+const AddPersonForm = memo(function AddPersonForm({ personName, setPersonName, gender, setGender, handleAddPerson, handleAddRandomPerson, handleGenerateRandomNetwork, handleDuplicateNetwork, networkLabel }) {
+  return (
+    <div className="mb-4">
+      <div className="flex gap-2 mb-2 flex-wrap">
+        <input
+          type="text"
+          value={personName}
+          onChange={(e) => {
+            setPersonName(e.target.value);
+            console.log(`[NetworkPanel] Input person name: ${e.target.value}`);
+          }}
+          placeholder="Name..."
+          className="flex-1 border p-2 rounded text-sm min-w-[120px]"
+        />
+        <button
+          onClick={() => {
+            setGender('male');
+            console.log(`[NetworkPanel] Gender selected: Male`);
+          }}
+          className={`p-2 rounded text-white text-sm ${gender === 'male' ? 'bg-blue-700' : 'bg-blue-500'}`}
+        >
+          <IoMdMale />
+        </button>
+        <button
+          onClick={() => {
+            setGender('female');
+            console.log(`[NetworkPanel] Gender selected: Female`);
+          }}
+          className={`p-2 rounded text-white text-sm ${gender === 'female' ? 'bg-pink-700' : 'bg-pink-500'}`}
+        >
+          <IoMdFemale />
+        </button>
+      </div>
+      <div className="flex gap-2 mb-2 flex-wrap">
+        <button
+          onClick={handleAddPerson}
+          className="bg-blue-600 text-white px-3 py-1 rounded flex-1 text-sm min-w-[120px]"
+        >
+          Add Person
+        </button>
+        <button
+          onClick={handleAddRandomPerson}
+          className="bg-indigo-600 text-white px-3 py-1 rounded flex-1 text-sm min-w-[120px]"
+        >
+          Add Random
+        </button>
+      </div>
+
+      <div className='flex items-center justify-evenly'>
+        {/* Generate Entire Random Network */}
+        <button
+          onClick={handleGenerateRandomNetwork}
+          className="bg-red-600 text-white px-3 py-2 rounded w-1/3 font-bold text-sm"
+        >
+          Generate Random Network
+        </button>
+        <button 
+          onClick={handleDuplicateNetwork}
+          className='bg-orange-600 text-white px-3 py-2 rounded w-1/3 font-bold text-sm'>
+          Duplicate Network {networkLabel === 'A' ? 'B' : 'A'}
+        </button>
+      </div>
+    </div>
+  );
+});
 
 function NetworkPanel({
   title,
@@ -11,7 +82,9 @@ function NetworkPanel({
   setPeople,
   friendships,
   setFriendships,
-  removePerson
+  removePerson,
+  otherPeople,
+  otherFriendships,
 }) {
   const [personName, setPersonName] = useState('');
   const [gender, setGender] = useState('');
@@ -141,13 +214,31 @@ function NetworkPanel({
     console.log(`[NetworkPanel - ${title}] Random network generation complete.`);
   };
 
+  /** Duplicate Network (A to B or B to A) */
+  const handleDuplicateNetwork = () => {
+    console.log(`[NetworkPanel - ${title}] Duplicating network ${networkLabel === 'A' ? 'B' : 'A'}`);
+
+    // Deep copy otherPeople and update the network label
+    const duplicatedPeople = otherPeople.map(p => ({ ...p, network: networkLabel }));
+    // Deep copy otherFriendships
+    const duplicatedFriendships = otherFriendships.map(f => ({ ...f }));
+
+    setPeople(duplicatedPeople);
+    setFriendships(duplicatedFriendships);
+
+    console.log(`[NetworkPanel - ${title}] Network ${networkLabel === 'A' ? 'B' : 'A'} duplicated.`);
+    alert(`Network ${networkLabel === 'A' ? 'B' : 'A'} duplicated into ${title}.`);
+  }
+
+  /** Explanation Handler */
   const explainPanel = () => {
     console.log(`[NetworkPanel - ${title}] User requested explanation for the panel.`);
     alert(
       `${title} Panel:\n\n` +
-      "• 'Add Person' => create a custom-named person in this network.\n" +
-      "• 'Add Random' => picks a random name/gender from the built-in list.\n" +
-      "• 'Generate Random Network' => replaces the entire network with a random set of people and friendships.\n\n" +
+      "• 'Add Person' => Create a custom-named person in this network.\n" +
+      "• 'Add Random' => Picks a random name/gender from the built-in list.\n" +
+      "• 'Generate Random Network' => Replaces the entire network with a random set of people and friendships.\n" +
+      "• 'Duplicate Network' => Copies all people and friendships from the other network into this one, making them independent.\n\n" +
       "Matrix Relevance:\n" +
       "• Each new node adds a new row & column to the adjacency matrix.\n" +
       "• The random edges will set 1 in the adjacency matrix for those node pairs.\n\n" +
@@ -155,6 +246,40 @@ function NetworkPanel({
       "• Simulate social or organizational networks.\n" +
       "• Quick 'random' data generation for testing or demos."
     );
+  };
+
+  /** Selection logic */
+  const [selectedNodes, setSelectedNodes] = useState([]);
+
+  const handleNodeClick = (selId) => {
+    console.log(`[NetworkPanel - ${title}] Handling node click: ${selId}`);
+    if (selectedNodes.includes(selId)) {
+      // Deselect node
+      setSelectedNodes(selectedNodes.filter(id => id !== selId));
+      console.log(`[NetworkPanel - ${title}] Deselected node: ${selId}`);
+    } else if (selectedNodes.length < 1) {
+      // Select first node
+      setSelectedNodes([...selectedNodes, selId]);
+      console.log(`[NetworkPanel - ${title}] Selected node: ${selId}`);
+    } else if (selectedNodes.length === 1) {
+      const firstId = selectedNodes[0];
+      if (firstId !== selId) {
+        // Attempt to create friendship
+        const exists = friendships.some(f =>
+          (f.source === firstId && f.target === selId) ||
+          (f.source === selId && f.target === firstId)
+        );
+        if (exists) {
+          alert('Friendship already exists in this network.');
+          console.warn(`[NetworkPanel - ${title}] Friendship already exists between ${firstId} and ${selId}.`);
+        } else {
+          setFriendships([...friendships, { source: firstId, target: selId }]);
+          console.log(`[NetworkPanel - ${title}] Created new friendship between ${firstId} and ${selId}.`);
+        }
+        // Reset selection
+        setSelectedNodes([]);
+      }
+    }
   };
 
   return (
@@ -173,62 +298,18 @@ function NetworkPanel({
         </p>
       </div>
 
-
       {/* Add Person UI */}
-      <div className="mb-4">
-        <div className="flex gap-2 mb-2 flex-wrap">
-          <input
-            type="text"
-            value={personName}
-            onChange={(e) => {
-              setPersonName(e.target.value);
-              console.log(`[NetworkPanel - ${title}] Input person name: ${e.target.value}`);
-            }}
-            placeholder="Name..."
-            className="flex-1 border p-2 rounded text-sm min-w-[120px]"
-          />
-          <button
-            onClick={() => {
-              setGender('male');
-              console.log(`[NetworkPanel - ${title}] Gender selected: Male`);
-            }}
-            className={`p-2 rounded text-white text-sm ${gender === 'male' ? 'bg-blue-700' : 'bg-blue-500'}`}
-          >
-            <IoMdMale />
-          </button>
-          <button
-            onClick={() => {
-              setGender('female');
-              console.log(`[NetworkPanel - ${title}] Gender selected: Female`);
-            }}
-            className={`p-2 rounded text-white text-sm ${gender === 'female' ? 'bg-pink-700' : 'bg-pink-500'}`}
-          >
-            <IoMdFemale />
-          </button>
-        </div>
-        <div className="flex gap-2 mb-2 flex-wrap">
-          <button
-            onClick={handleAddPerson}
-            className="bg-blue-600 text-white px-3 py-1 rounded flex-1 text-sm min-w-[120px]"
-          >
-            Add Person
-          </button>
-          <button
-            onClick={handleAddRandomPerson}
-            className="bg-indigo-600 text-white px-3 py-1 rounded flex-1 text-sm min-w-[120px]"
-          >
-            Add Random
-          </button>
-        </div>
-
-        {/* Generate Entire Random Network */}
-        <button
-          onClick={handleGenerateRandomNetwork}
-          className="bg-red-600 text-white px-3 py-2 rounded w-full font-bold text-sm"
-        >
-          Generate Random Network
-        </button>
-      </div>
+      <AddPersonForm 
+        personName={personName}
+        setPersonName={setPersonName}
+        gender={gender}
+        setGender={setGender}
+        handleAddPerson={handleAddPerson}
+        handleAddRandomPerson={handleAddRandomPerson}
+        handleGenerateRandomNetwork={handleGenerateRandomNetwork}
+        handleDuplicateNetwork={handleDuplicateNetwork}
+        networkLabel={networkLabel}
+      />
 
       {/* Graph */}
       <GraphVisualization
@@ -238,6 +319,9 @@ function NetworkPanel({
         setFriendships={setFriendships}
         networkLabel={networkLabel}
         removePerson={removePerson}
+        readOnly={false} // Ensure readOnly is false for Network Panels
+        onNodeClick={handleNodeClick} // Pass the node click handler
+        selectedNodes={selectedNodes} // Pass selected nodes for highlighting
       />
 
       {/* Tables & Suggestions */}

@@ -1,3 +1,4 @@
+// MatrixOperations.js
 import React from 'react';
 import { FaQuestionCircle } from 'react-icons/fa';
 
@@ -114,15 +115,15 @@ function matrixToNetwork(matrix, unifiedPeople) {
 function MatrixOperations({
   peopleA, friendshipsA,
   peopleB, friendshipsB,
-  peopleResult, setPeopleResult,
-  friendshipsResult, setFriendshipsResult
+  setPeopleResult,
+  setFriendshipsResult
 }) {
   const explain = () => {
     alert(
       "Matrix Operations:\n\n" +
       "• A + B => Merges edges (union) for the unified set of people.\n" +
       "• A - B => Keeps edges in A but not in B.\n" +
-      "• A x B => If there's a 2-step path, we create a new edge.\n\n" +
+      "• A × B => If there's a 2-step path, we create a new edge.\n\n" +
       "Implementation:\n" +
       "1. We unify the people sets from A & B.\n" +
       "2. We build adjacency matrices that match this unified set.\n" +
@@ -131,8 +132,7 @@ function MatrixOperations({
       "Real World Usage:\n" +
       "• Merging two social networks.\n" +
       "• Finding unique vs shared edges.\n" +
-      "• Exploring 2-step paths that might suggest 'friend-of-a-friend' relationships.\n\n" +
-      "Click 'Clear Result' to empty the result graph."
+      "• Exploring 2-step paths that might suggest 'friend-of-a-friend' relationships.\n\n"
     );
   };
 
@@ -146,6 +146,7 @@ function MatrixOperations({
     setPeopleResult(newPeople);
     setFriendshipsResult(newFriendships);
     alert("A + B => Union of edges. Check the Result Graph below!");
+    console.log('[MatrixOperations] Performed A + B operation.');
   };
 
   const handleSubtract = () => {
@@ -158,6 +159,7 @@ function MatrixOperations({
     setPeopleResult(newPeople);
     setFriendshipsResult(newFriendships);
     alert("A - B => Edges in A not in B. Check the Result Graph!");
+    console.log('[MatrixOperations] Performed A - B operation.');
   };
 
   const handleMultiply = () => {
@@ -170,22 +172,33 @@ function MatrixOperations({
     setPeopleResult(newPeople);
     setFriendshipsResult(newFriendships);
     alert("A × B => edges if there's a 2-step path. Check the Result Graph!");
+    console.log('[MatrixOperations] Performed A × B operation.');
   };
 
-  const handleClear = () => {
+  const handleClearResult = () => {
     setPeopleResult([]);
     setFriendshipsResult([]);
+    alert("Result Graph has been cleared.");
+    console.log('[MatrixOperations] Result graph cleared.');
   };
 
   return (
     <div className="bg-white rounded shadow p-4 mb-4 sm:p-3">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xl font-semibold">Matrix Operations (A & B)</h2>
-        <FaQuestionCircle
-          onClick={explain}
-          className="text-gray-500 hover:text-gray-700 cursor-pointer"
-          title="Learn about Matrix Operations"
-        />
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">Matrix Operations (A & B)</h2>
+          <FaQuestionCircle
+            onClick={explain}
+            className="text-gray-500 hover:text-gray-700 cursor-pointer"
+            title="Learn about Matrix Operations"
+          />
+        </div>
+        {/* <button
+          onClick={handleClearResult}
+          className="bg-gray-500 text-white px-3 py-2 rounded text-sm"
+        >
+          Clear Result
+        </button> */}
       </div>
       <p className="text-sm text-gray-600 mb-4">
         Use these operations on the unified adjacency matrices of A & B, then see the result below.
@@ -208,13 +221,7 @@ function MatrixOperations({
           onClick={handleMultiply}
           className="bg-purple-600 text-white px-3 py-2 rounded text-sm"
         >
-          A x B => Result
-        </button>
-        <button
-          onClick={handleClear}
-          className="bg-red-600 text-white px-3 py-2 rounded text-sm"
-        >
-          Clear Graph
+          A × B => Result
         </button>
       </div>
     </div>
